@@ -1,0 +1,364 @@
+//install mongodb compass ->  sudo dpkg -i mongodb-c
+//install all below 
+//npm init -y  // npm i express mongoose//dotenv//nmp i nodemon//nodemon erver.js//create folder views with file index.ejs
+
+//server.js
+
+const express = require("express")
+const mongoose = require("mongoose")
+const dotenv = require("dotenv")
+const ejs = require("ejs")
+const Songs = require("./models/Songs")
+
+const app = express()
+dotenv.config()
+app.use(express.json())
+app.set("view engine", "ejs")
+app.use(express.urlencoded({ extended: true }))
+
+
+MONGO_URI = process.env.MONGO_URI;
+mongoose.connect(MONGO_URI)
+    .then(() => {
+        console.log("Connected to MONGODB database!");
+    })
+    .catch(error => console.log(error))
+
+
+// ROUTES
+app.get("/", (req, res) => {
+    res.send("API is running!")
+})
+
+
+// QUERY : A, B, C
+app.get("/insert-documents", async (req, res) => {
+    try {
+        const documents = [
+            {
+                Songname: "Tum hi ho",
+                Film: "Aashiqui 2",
+                Music_director: "A.R. Rahman",
+                Singer: "Arijit Singh"
+            },
+            {
+                Songname: "Nadaan Parindey",
+                Film: "Rockstar",
+                Music_director: "Mohit Suri",
+                Singer: "k.K"
+            },
+            {
+                Songname: "Ae Watan",
+                Film: "Raazi",
+                Music_director: "Arijit Singh",
+                Singer: "Sunidhi Chauhan"
+            },
+            {
+                Songname: "Ilahi",
+                Film: "Ye jawani hai deewani",
+                Music_director: "Ilahiraja",
+                Singer: "Pritam"
+            },
+            {
+                Songname: "Bachna ae haseeno",
+                Film: "Loot Machi sheher mai",
+                Music_director: "R.D. Burman",
+                Singer: "Kishore Kumar"
+            },
+        ]
+
+        await Songs.insertMany(documents);
+        res.send("Documents inserted Successfully!");
+    } catch (error) {
+        res.status(401).send(error);
+        console.log(error);
+    }
+})
+
+
+// QUERY : D
+app.get("/documents", (req, res) => {
+    Songs.find({})
+        .then(songs => {
+            res.render("index", {
+                songsList: songs
+            })
+        })
+        .catch(error => console.log(error))
+})
+
+
+// QUERY : E
+app.get("/music-director", (req, res) => {
+    const music_director = "R.D. Burman"
+
+    Songs.find({ "Music_director": music_director })
+        .then(songs => {
+            res.render("index", {
+                songsList: songs
+            })
+        })
+        .catch(error => console.log(error))
+
+})
+
+
+// QUERY : F
+app.get("/singer-music-director", (req, res) => {
+    const music_director = "R.D. Burman"
+    const singer = "Kishore Kumar"
+
+    Songs.find({ $and: [{ "Music_director": music_director }, { "Singer": singer }] })
+        .then(songs => {
+            res.render("index", {
+                songsList: songs
+            })
+        })
+        .catch(error => console.log(error))
+})
+
+
+// QUERY : G
+app.get("/delete-song", async (req, res) => {
+    try {
+        const song = "Lo me agaya"
+
+        await Songs.deleteOne({ Songname: song })
+        res.send(`Song ${song} deleted successfully`)
+    } catch (error) {
+        res.status(401).send(error);
+        console.log(error);
+    }
+})
+
+
+// QUERY : H
+app.get("/add", async (req, res) => {
+    try {
+        await Songs.create({
+            Songname: "Lo me agaya",
+            Film: "Ek waaris",
+            Music_director: "R.D. Burman",
+            Singer: "Kumar Sanu"
+        })
+
+        await Songs.create({
+            Songname: "Chahun mai yaa na",
+            Film: "Aashiqui 2",
+            Music_director: "A.R. Rahman",
+            Singer: "Sunidhi Chauhan"
+        })
+
+        res.send("New document added successfully!")
+    } catch (error) {
+        res.status(401).send(error);
+        console.log(error);
+    }
+})
+
+
+// QUERY : I
+app.get("/singer-film", (req, res) => {
+    const singerName = "Sunidhi Chauhan"
+    const filmName = "Aashiqui 2"
+
+    Songs.find({ $and: [{ "Singer": singerName, "Film": filmName }] })
+        .then(songs => {
+            res.render("index", {
+                songsList: songs
+            })
+        })
+        .catch(error => console.log(error))
+})
+
+
+// QUERY : J
+app.get("/update-schema", async (req, res) => {
+    try {
+        await Songs.updateMany({ Film: "Aashiqui 2" }, { Actor: "Aditya Roy Kapoor", Actress: "Shraddha Kapoor" })
+        await Songs.updateOne({ Film: "Rockstar" }, { Actor: "Ranbir Kapoor", Actress: "Nargis Fakhri" })
+        await Songs.updateOne({ Film: "Raazi" }, { Actor: "Vicky Kaushal", Actress: "Alia Bhatt" })
+        await Songs.updateOne({ Film: "Ye jawani hai deewani" }, { Actor: "Ranbir Kapoor", Actress: "Deepika Padukone" })
+        await Songs.updateOne({ Film: "Ek waaris" }, { Actor: "Amitabh Bachhan", Actress: "Huma Qureshi" })
+
+        res.send("Documents updated successfully")
+    } catch (error) {
+        res.status(401).send(error);
+        console.log(error);
+    }
+})
+
+
+// QUERY : K
+app.get("/new-schema", (req, res) => {
+    Songs.find({})
+        .then(songs => {
+            res.render("update", {
+                songsList: songs
+            })
+        })
+        .catch(error => console.log(error))
+})
+
+
+// APP LISTENING ON PORT
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+    console.log(`Server listening on PORT: ${PORT}`);
+})
+
+
+
+
+//views-> index.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <title>Music</title>
+  </head>
+  <body>
+    <div class="container p-5">
+      <h1 class="fw-bold">Music database :</h1>
+      <hr />
+
+      <% if (Object.keys(songsList).length === 5) {%>
+      <p class="fw-bold fs-4">
+        Number of documents in database is : <%= Object.keys(songsList).length
+        %> <% }%>
+      </p>
+      <hr />
+
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Songname</th>
+            <th>Movie</th>
+            <th>Singer</th>
+            <th>Music_Director</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% songsList.forEach(song => { %>
+          <tr>
+            <td><%= song.Songname %></td>
+            <td><%= song.Film %></td>
+            <td><%= song.Singer %></td>
+            <td><%= song.Music_director %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
+
+
+
+//update.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <title>Music</title>
+  </head>
+  <body>
+    <div class="container p-5">
+      <h1 class="fw-bold">Music database :</h1>
+      <hr />
+
+      <% if (Object.keys(songsList).length >= 5) {%>
+      <p class="fw-bold fs-4">
+        Number of documents in database is : <%= Object.keys(songsList).length
+        %> <% }%>
+      </p>
+      <hr />
+
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Songname</th>
+            <th>Movie</th>
+            <th>Singer</th>
+            <th>Music_Director</th>
+            <th>Actor</th>
+            <th>Actress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% songsList.forEach(song => { %>
+          <tr>
+            <td><%= song.Songname %></td>
+            <td><%= song.Film %></td>
+            <td><%= song.Singer %></td>
+            <td><%= song.Music_director %></td>
+            <td><%= song.Actor %></td>
+            <td><%= song.Actress %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
+
+
+//models -> Songs.js
+
+const mongoose = require("mongoose")
+
+
+// DEFINING THE SONGS SCHEMA
+const songSchema = new mongoose.Schema({
+    Songname: String,
+    Film: String,
+    Music_director: String,
+    Singer: String,
+    Actor: String,
+    Actress: String
+})
+
+// CREATING THE MODEL OR COLLECTION BASED ON THE ABOVE SCHEMA
+const SongDetails = mongoose.model("SongDetails", songSchema);
+
+// EXPORTING THE MODEL
+module.exports = SongDetails;
+
+
+//.env
+
+PORT = 3000
+MONGO_URI = "mongodb://localhost:27017/Music"
