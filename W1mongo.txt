@@ -1,6 +1,6 @@
 //install mongodb compass ->  sudo dpkg -i mongodb-c
 //install all below 
-
+//npm init -y  // npm i express mongoose//dotenv//nmp i nodemon//nodemon erver.js//create folder views with file index.ejs
 
 const express = require("express");
 const dotenv = require("dotenv")
